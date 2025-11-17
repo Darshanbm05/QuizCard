@@ -1,70 +1,119 @@
-# Getting Started with Create React App
+# QuizCard 🎴
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+An interactive quiz card game with role-based access for teachers and students. Built with React, Firebase, and Material-UI.
 
-## Available Scripts
+## ✨ Features
 
-In the project directory, you can run:
+### For Teachers 👨‍🏫
+- Create and manage quizzes with multiple-choice questions
+- Edit existing quizzes
+- Delete quizzes with confirmation
+- Generate unique quiz codes for sharing
+- View detailed analytics and student performance
+- Track quiz attempts and scores
 
-### `npm start`
+### For Students 🎓
+- Play quizzes using quiz codes
+- Interactive card-based answer selection
+- Countdown timer for each question
+- View score history and statistics
+- Compete on leaderboards with rankings
+- Track overall performance metrics
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🎨 UI Highlights
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Beautiful gradient backgrounds
+- Smooth animations and transitions
+- Responsive 2x2 card layout
+- Role-based color themes
+- Floating logo animations
+- Real-time timer with visual feedback
 
-### `npm test`
+## 🛠️ Tech Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Frontend**: React, Material-UI
+- **Backend**: Firebase (Authentication + Firestore)
+- **Routing**: React Router
+- **Styling**: Styled Components, CSS-in-JS
+- **Icons**: Material-UI Icons
 
-### `npm run build`
+## 📦 Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository:
+```bash
+git clone https://github.com/SaherMahtab/QuizCard.git
+cd QuizCard
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Install dependencies:
+```bash
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Set up Firebase:
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - Enable Email/Password authentication
+   - Create a Firestore database
+   - Copy `src/firebase/config.example.js` to `src/firebase/config.js`
+   - Add your Firebase credentials to `config.js`
 
-### `npm run eject`
+4. Run the development server:
+```bash
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🔐 Firebase Setup
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. Go to Firebase Console → Project Settings
+2. Under "Your apps", click the web icon `</>`
+3. Copy your Firebase configuration
+4. Paste it into `src/firebase/config.js`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Required Firebase services:
+- Authentication (Email/Password)
+- Firestore Database
 
-## Learn More
+## 📝 Usage
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### As a Teacher:
+1. Sign up with teacher role
+2. Create a new quiz with questions
+3. Share the quiz code with students
+4. Monitor student performance in analytics
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### As a Student:
+1. Sign up with student role
+2. Enter a quiz code on the dashboard
+3. Play the quiz and answer questions
+4. View your score and compete on leaderboards
 
-### Code Splitting
+## 🤝 Contributing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Analyzing the Bundle Size
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 📄 License
 
-### Making a Progressive Web App
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 👤 Author
 
-### Advanced Configuration
+**Saher Mahtab**
+- GitHub: [@SaherMahtab](https://github.com/SaherMahtab)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🙏 Acknowledgments
 
-### Deployment
+- Material-UI for the component library
+- Firebase for backend services
+- React community for inspiration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Made with ❤️ for educational purposes
