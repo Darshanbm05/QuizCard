@@ -327,7 +327,7 @@ export default function MyQuizzes() {
             </PrimaryButton>
           </EmptyStateCard>
         ) : (
-          <Grid container spacing={3}>
+          <Grid container spacing={3} justifyContent="center">
             {quizzes.map((quiz, index) => (
               <Grid item xs={12} sm={6} md={4} key={quiz.id}>
                 <QuizCard sx={{ animationDelay: `${index * 0.1}s` }}>
