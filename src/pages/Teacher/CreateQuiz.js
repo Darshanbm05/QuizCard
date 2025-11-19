@@ -234,19 +234,42 @@ export default function CreateQuiz() {
     setSuccess(false);
 
     // Validation
-    if (!quizData.title || !quizData.subject) {
+    if (!quizData.title.trim() || !quizData.subject.trim()) {
       setError('Please fill in quiz title and subject');
       return;
     }
 
     for (let i = 0; i < quizData.questions.length; i++) {
       const q = quizData.questions[i];
-      if (!q.questionText) {
-        setError(`Question ${i + 1} is empty`);
+
+      // Question text check
+      if (!q.questionText || q.questionText.trim() === '') {
+        setError(`Question ${i + 1} cannot be empty.`);
         return;
       }
-      if (q.options.some(opt => !opt)) {
-        setError(`Question ${i + 1} has empty options`);
+
+      // Options check
+      if (!q.options || q.options.length < 2) {
+        setError(`Question ${i + 1} must have at least 2 options.`);
+        return;
+      }
+
+      for (let j = 0; j < q.options.length; j++) {
+        const opt = q.options[j];
+        if (!opt || opt.trim() === '') {
+          setError(`Option ${j + 1} of Question ${i + 1} cannot be empty.`);
+          return;
+        }
+      }
+
+      // Correct answer check
+      if (
+          q.correctAnswer === null ||
+          q.correctAnswer === undefined ||
+          q.correctAnswer < 0 ||
+          q.correctAnswer >= q.options.length
+      ) {
+        setError(`Question ${i + 1} must have one correct answer selected.`);
         return;
       }
     }
