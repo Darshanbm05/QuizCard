@@ -1,4 +1,4 @@
-# QuizCard 🎴
+# QuizCard 
 
 An interactive quiz card game with role-based access for teachers and students. Built with React, Firebase, and Material-UI.
 
