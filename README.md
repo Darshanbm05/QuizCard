@@ -36,6 +36,7 @@ An interactive quiz card game with role-based access for teachers and students. 
 - **Routing**: React Router
 - **Styling**: Styled Components, CSS-in-JS
 - **Icons**: Material-UI Icons
+- **API Documentation**: OpenAPI 3.0 (Swagger)
 
 ## 📦 Installation
 
@@ -75,7 +76,24 @@ Required Firebase services:
 - Authentication (Email/Password)
 - Firestore Database
 
-## 📝 Usage
+## 📚 API Documentation
+
+QuizCard includes API documentation using OpenAPI 3.0 (Swagger).
+
+**View API Documentation:**
+
+```bash
+# Start interactive Swagger UI on localhost:8080
+npm run api-docs
+```
+
+Then open http://localhost:8080 in your browser to explore all API endpoints.
+
+**Files:**
+- `swagger.yaml` - OpenAPI 3.0 specification
+- `postman_collection.json` - Import into Postman for API testing
+
+**Alternative:** Open [Swagger Editor](https://editor.swagger.io/) and import `swagger.yaml`
 
 ### As a Teacher:
 1. Sign up with teacher role

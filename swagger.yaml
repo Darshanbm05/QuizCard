@@ -1,0 +1,927 @@
+openapi: 3.0.3
+info:
+  title: QuizCard API
+  description: |
+    Interactive quiz card game API with role-based access for teachers and students.
+    
+    ## Features
+    - User authentication (signup/login/logout)
+    - Role-based access (Teacher/Student)
+    - Quiz creation and management
+    - Quiz playing with timer
+    - Leaderboards and analytics
+    - Score tracking and history
+    
+  version: 0.1.0
+  contact:
+    name: Saher Mahtab
+    url: https://github.com/SaherMahtab/QuizCard
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://quizcard-38894.firebaseapp.com/api/v1
+    description: Production server (Firebase)
+  - url: http://localhost:3001/api/v1
+    description: Development server (use port 3001 to avoid conflict with React)
+
+tags:
+  - name: Authentication
+    description: User authentication operations
+  - name: Users
+    description: User management operations
+  - name: Quizzes
+    description: Quiz management operations (Teacher only)
+  - name: Quiz Play
+    description: Quiz playing operations (Student only)
+  - name: Scores
+    description: Score tracking and history
+  - name: Leaderboard
+    description: Leaderboard and rankings
+  - name: Analytics
+    description: Quiz analytics and statistics (Teacher only)
+
+paths:
+  /auth/signup:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Creates a new user account with email, password, name, and role
+      operationId: signup
+      security: []  # No authentication required for signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+                - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john.doe@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: password123
+                name:
+                  type: string
+                  example: John Doe
+                role:
+                  type: string
+                  enum: [teacher, student]
+                  example: student
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                    example: abc123xyz789
+                  email:
+                    type: string
+                    example: john.doe@example.com
+                  name:
+                    type: string
+                    example: John Doe
+                  role:
+                    type: string
+                    example: student
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict - Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticates user with email and password
+      operationId: login
+      security: []  # No authentication required for login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john.doe@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized - Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: Logs out the current user
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user
+      description: Retrieves the currently authenticated user's information
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /quizzes:
+    get:
+      tags:
+        - Quizzes
+      summary: Get all quizzes for teacher
+      description: Retrieves all quizzes created by the authenticated teacher
+      operationId: getTeacherQuizzes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: teacherId
+          in: query
+          description: Filter by teacher ID (auto-populated from auth token)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Quizzes retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quiz'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Teacher role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Quizzes
+      summary: Create a new quiz
+      description: Creates a new quiz (Teacher only)
+      operationId: createQuiz
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizCreate'
+      responses:
+        '201':
+          description: Quiz created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Teacher role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /quizzes/code/{quizCode}:
+    get:
+      tags:
+        - Quiz Play
+      summary: Get quiz by code
+      description: Retrieves a quiz using its unique code (Student)
+      operationId: getQuizByCode
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: quizCode
+          in: path
+          required: true
+          description: Unique quiz code
+          schema:
+            type: string
+            example: ABC123
+      responses:
+        '200':
+          description: Quiz retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /quizzes/{quizId}:
+    get:
+      tags:
+        - Quizzes
+      summary: Get quiz by ID
+      description: Retrieves a specific quiz by its ID
+      operationId: getQuizById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          description: Quiz ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Quiz retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Quizzes
+      summary: Update quiz
+      description: Updates an existing quiz (Teacher only)
+      operationId: updateQuiz
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          description: Quiz ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizUpdate'
+      responses:
+        '200':
+          description: Quiz updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Not the quiz owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Quizzes
+      summary: Delete quiz
+      description: Deletes a quiz (Teacher only)
+      operationId: deleteQuiz
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          description: Quiz ID
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Quiz deleted successfully
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Not the quiz owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /quizzes/{quizId}/analytics:
+    get:
+      tags:
+        - Analytics
+      summary: Get quiz analytics
+      description: Retrieves analytics for a specific quiz (Teacher only)
+      operationId: getQuizAnalytics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          description: Quiz ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizAnalytics'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Teacher role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /scores:
+    post:
+      tags:
+        - Scores
+      summary: Submit quiz score
+      description: Submits a student's quiz score
+      operationId: submitScore
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreSubmit'
+      responses:
+        '201':
+          description: Score submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Score'
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /scores/student/{studentId}:
+    get:
+      tags:
+        - Scores
+      summary: Get student's score history
+      description: Retrieves all scores for a specific student
+      operationId: getStudentScores
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: Student ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scores retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Score'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /scores/quiz/{quizId}:
+    get:
+      tags:
+        - Scores
+      summary: Get all scores for a quiz
+      description: Retrieves all scores for a specific quiz (Teacher only)
+      operationId: getQuizScores
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          description: Quiz ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Scores retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Score'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Teacher role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /leaderboard/{quizCode}:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get leaderboard for quiz
+      description: Retrieves the leaderboard for a specific quiz
+      operationId: getLeaderboard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: quizCode
+          in: path
+          required: true
+          description: Quiz code
+          schema:
+            type: string
+            example: ABC123
+      responses:
+        '200':
+          description: Leaderboard retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Leaderboard'
+        '404':
+          description: Quiz not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase Authentication Token
+
+  schemas:
+    User:
+      type: object
+      properties:
+        uid:
+          type: string
+          description: User unique identifier
+          example: abc123xyz789
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        name:
+          type: string
+          example: John Doe
+        role:
+          type: string
+          enum: [teacher, student]
+          example: student
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-11-24T10:30:00Z'
+
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Quiz unique identifier
+          example: quiz123
+        title:
+          type: string
+          example: Introduction to React
+        description:
+          type: string
+          example: Test your knowledge of React basics
+        quizCode:
+          type: string
+          description: Unique code for students to join the quiz
+          example: ABC123
+        teacherId:
+          type: string
+          example: teacher123
+        teacherName:
+          type: string
+          example: Prof. Smith
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Question'
+        totalQuestions:
+          type: integer
+          example: 10
+        timePerQuestion:
+          type: integer
+          description: Time in seconds for each question
+          example: 30
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-11-24T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-11-24T10:30:00Z'
+
+    QuizCreate:
+      type: object
+      required:
+        - title
+        - description
+        - questions
+        - timePerQuestion
+      properties:
+        title:
+          type: string
+          example: Introduction to React
+        description:
+          type: string
+          example: Test your knowledge of React basics
+        questions:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/QuestionCreate'
+        timePerQuestion:
+          type: integer
+          minimum: 10
+          maximum: 300
+          description: Time in seconds for each question
+          example: 30
+
+    QuizUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Introduction to React - Updated
+        description:
+          type: string
+          example: Updated test your knowledge of React basics
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionCreate'
+        timePerQuestion:
+          type: integer
+          minimum: 10
+          maximum: 300
+          example: 45
+
+    Question:
+      type: object
+      properties:
+        id:
+          type: string
+          example: q1
+        question:
+          type: string
+          example: What is React?
+        options:
+          type: array
+          items:
+            type: string
+          example: ['A JavaScript library', 'A programming language', 'A database', 'An operating system']
+        correctAnswer:
+          type: integer
+          description: Index of the correct answer (0-3)
+          example: 0
+
+    QuestionCreate:
+      type: object
+      required:
+        - question
+        - options
+        - correctAnswer
+      properties:
+        question:
+          type: string
+          example: What is React?
+        options:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items:
+            type: string
+          example: ['A JavaScript library', 'A programming language', 'A database', 'An operating system']
+        correctAnswer:
+          type: integer
+          minimum: 0
+          maximum: 3
+          description: Index of the correct answer (0-3)
+          example: 0
+
+    Score:
+      type: object
+      properties:
+        id:
+          type: string
+          example: score123
+        studentId:
+          type: string
+          example: student123
+        studentName:
+          type: string
+          example: John Doe
+        quizId:
+          type: string
+          example: quiz123
+        quizTitle:
+          type: string
+          example: Introduction to React
+        score:
+          type: integer
+          description: Number of correct answers
+          example: 8
+        totalQuestions:
+          type: integer
+          example: 10
+        percentage:
+          type: number
+          format: float
+          example: 80.0
+        timeTaken:
+          type: integer
+          description: Total time taken in seconds
+          example: 240
+        submittedAt:
+          type: string
+          format: date-time
+          example: '2024-11-24T11:00:00Z'
+
+    ScoreSubmit:
+      type: object
+      required:
+        - quizId
+        - score
+        - totalQuestions
+        - timeTaken
+      properties:
+        quizId:
+          type: string
+          example: quiz123
+        score:
+          type: integer
+          description: Number of correct answers
+          example: 8
+        totalQuestions:
+          type: integer
+          example: 10
+        timeTaken:
+          type: integer
+          description: Total time taken in seconds
+          example: 240
+
+    Leaderboard:
+      type: object
+      properties:
+        quizId:
+          type: string
+          example: quiz123
+        quizTitle:
+          type: string
+          example: Introduction to React
+        quizCode:
+          type: string
+          example: ABC123
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+          example: 1
+        studentId:
+          type: string
+          example: student123
+        studentName:
+          type: string
+          example: John Doe
+        score:
+          type: integer
+          example: 8
+        totalQuestions:
+          type: integer
+          example: 10
+        percentage:
+          type: number
+          format: float
+          example: 80.0
+        timeTaken:
+          type: integer
+          description: Total time taken in seconds
+          example: 240
+        submittedAt:
+          type: string
+          format: date-time
+          example: '2024-11-24T11:00:00Z'
+
+    QuizAnalytics:
+      type: object
+      properties:
+        quizId:
+          type: string
+          example: quiz123
+        quizTitle:
+          type: string
+          example: Introduction to React
+        totalAttempts:
+          type: integer
+          description: Total number of attempts
+          example: 50
+        uniqueStudents:
+          type: integer
+          description: Number of unique students who attempted
+          example: 45
+        averageScore:
+          type: number
+          format: float
+          description: Average score across all attempts
+          example: 7.5
+        averagePercentage:
+          type: number
+          format: float
+          description: Average percentage across all attempts
+          example: 75.0
+        highestScore:
+          type: integer
+          example: 10
+        lowestScore:
+          type: integer
+          example: 3
+        averageTimeTaken:
+          type: number
+          format: float
+          description: Average time taken in seconds
+          example: 210.5
+        topPerformers:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+          description: Top 10 performers
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_CREDENTIALS
+        message:
+          type: string
+          example: Invalid email or password
+        details:
+          type: object
+          additionalProperties: true
