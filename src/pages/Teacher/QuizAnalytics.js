@@ -16,7 +16,8 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Button
 } from '@mui/material';
 import { styled, keyframes, useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -25,6 +26,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SchoolIcon from '@mui/icons-material/School';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import DownloadIcon from '@mui/icons-material/Download';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import DarkModeToggle from '../../components/Common/DarkModeToggle';
@@ -238,6 +240,38 @@ const EmptyStateBox = styled(Box)({
   }
 });
 
+const ExportButton = styled(Button)(({ theme }) => ({
+  background: theme.palette.mode === 'dark'
+    ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+    : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+  color: 'white',
+  borderRadius: '12px',
+  padding: '8px 20px',
+  textTransform: 'none',
+  fontWeight: '600',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 4px 12px rgba(59, 130, 246, 0.3)'
+    : '0 4px 12px rgba(59, 130, 246, 0.2)',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    background: theme.palette.mode === 'dark'
+      ? 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)'
+      : 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
+    transform: 'translateY(-2px)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 6px 16px rgba(59, 130, 246, 0.4)'
+      : '0 6px 16px rgba(59, 130, 246, 0.3)',
+  },
+  '&:disabled': {
+    background: theme.palette.mode === 'dark'
+      ? 'rgba(100, 116, 139, 0.5)'
+      : 'rgba(203, 213, 225, 0.5)',
+    color: theme.palette.mode === 'dark'
+      ? 'rgba(148, 163, 184, 0.5)'
+      : 'rgba(100, 116, 139, 0.5)',
+  }
+}));
+
 export default function QuizAnalytics() {
   const { quizId } = useParams();
   const navigate = useNavigate();
@@ -334,6 +368,54 @@ export default function QuizAnalytics() {
     });
   };
 
+  const exportToCSV = () => {
+    if (scores.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+    // CSV Headers
+    const headers = ['Student Name', 'Email', 'Score', 'Total Questions', 'Percentage (%)', 'Completed At'];
+
+    // CSV Rows
+    const rows = scores
+      .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+      .map(score => {
+        const student = students[score.studentId] || {};
+        const percentage = ((score.score / score.totalQuestions) * 100).toFixed(1);
+
+        return [
+          student.name || 'Unknown',
+          student.email || 'N/A',
+          score.score,
+          score.totalQuestions,
+          percentage,
+          formatDate(score.completedAt)
+        ];
+      });
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    // Generate filename with quiz title and date
+    const fileName = `${quiz.title.replace(/[^a-z0-9]/gi, '_')}_Results_${new Date().toISOString().split('T')[0]}.csv`;
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <GradientBackground>
@@ -389,6 +471,14 @@ export default function QuizAnalytics() {
           <Typography variant="h6" sx={{ flexGrow: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
             Quiz Analytics
           </Typography>
+          <ExportButton
+            startIcon={<DownloadIcon />}
+            onClick={exportToCSV}
+            disabled={scores.length === 0}
+            sx={{ mr: 2 }}
+          >
+            Export CSV
+          </ExportButton>
           <DarkModeToggle />
         </Toolbar>
       </GlassAppBar>
