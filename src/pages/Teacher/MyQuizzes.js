@@ -31,6 +31,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import DarkModeToggle from '../../components/Common/DarkModeToggle';
+import { QRCodeCanvas } from 'qrcode.react';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import QrCodeIcon from '@mui/icons-material/QrCode';
 
 // Animations
 const fadeInUp = keyframes`
@@ -251,6 +254,16 @@ const StyledChip = styled(Chip)({
   }
 });
 
+const SecondaryButton = styled(ActionButton)({
+  color: '#6b7280',
+  background: 'rgba(107, 114, 128, 0.1)',
+  border: '1px solid rgba(107, 114, 128, 0.2)',
+  '&:hover': {
+    background: 'rgba(107, 114, 128, 0.2)',
+    transform: 'translateY(-2px)',
+  }
+});
+
 export default function MyQuizzes() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -259,6 +272,8 @@ export default function MyQuizzes() {
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [copySnackbar, setCopySnackbar] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [selectedQuizCode, setSelectedQuizCode] = useState('');
 
   useEffect(() => {
     fetchQuizzes();
@@ -303,6 +318,20 @@ export default function MyQuizzes() {
       alert('Failed to delete quiz: ' + error.message);
       setDeleteLoading(null);
     }
+  };
+
+  const handleShowQR = (quizCode) => {
+    setSelectedQuizCode(quizCode);
+    setQrDialogOpen(true);
+  };
+
+  const handleDownloadQR = () => {
+    const canvas = document.getElementById('qr-canvas');
+    const url = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = `quiz-${selectedQuizCode}-qr.png`;
+    link.href = url;
+    link.click();
   };
 
   return (
@@ -401,24 +430,38 @@ export default function MyQuizzes() {
 
                     <QuizCodeBox>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Typography variant="body2" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
+                        <Typography variant="body2" sx={{ color: '#000000', fontWeight: '600' }}>
                           Quiz Code: {quiz.quizCode}
                         </Typography>
-                        <IconButton
-                          size="small"
-                          onClick={() => {
-                            navigator.clipboard.writeText(quiz.quizCode);
-                            setCopySnackbar(true);
-                          }}
-                          sx={{
-                            color: '#3b82f6',
-                            '&:hover': {
-                              background: 'rgba(59, 130, 246, 0.1)',
-                            }
-                          }}
-                        >
-                          <ContentCopyIcon fontSize="small" />
-                        </IconButton>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleShowQR(quiz.quizCode)}
+                            sx={{
+                              color: '#7c3aed',
+                              '&:hover': {
+                                background: 'rgba(124, 58, 237, 0.1)',
+                              }
+                            }}
+                          >
+                            <QrCodeIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              navigator.clipboard.writeText(quiz.quizCode);
+                              setCopySnackbar(true);
+                            }}
+                            sx={{
+                              color: '#3b82f6',
+                              '&:hover': {
+                                background: 'rgba(59, 130, 246, 0.1)',
+                              }
+                            }}
+                          >
+                            <ContentCopyIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
                       </Box>
                     </QuizCodeBox>
                   </CardContent>
@@ -453,24 +496,69 @@ export default function MyQuizzes() {
           </Grid>
         )}
       </Container>
-      <Snackbar
-        open={copySnackbar}
-        autoHideDuration={2000}
-        onClose={() => setCopySnackbar(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setCopySnackbar(false)}
-          severity="success"
-          sx={{
-            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-            color: 'white',
-            fontWeight: '600'
-          }}
-        >
-          Quiz code copied to clipboard!
-        </Alert>
-      </Snackbar>
+
+      {/* QR Code Dialog */}
+            <Dialog
+              open={qrDialogOpen}
+              onClose={() => setQrDialogOpen(false)}
+              maxWidth="sm"
+              fullWidth
+            >
+              <DialogTitle sx={{ textAlign: 'center', fontWeight: '600' }}>
+                📱 Scan to Join Quiz
+              </DialogTitle>
+              <DialogContent sx={{ textAlign: 'center', py: 4 }}>
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 3
+                }}>
+                  <QRCodeCanvas
+                    id="qr-canvas"
+                    value={`${window.location.origin}/student/play/${selectedQuizCode}`}
+                    size={256}
+                    level="H"
+                    includeMargin={true}
+                  />
+                  <Box>
+                    <Typography variant="h5" sx={{ fontWeight: '700', color: '#3b82f6', mb: 1 }}>
+                      {selectedQuizCode}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#666666' }}>
+                      Students can scan this QR code to join the quiz
+                    </Typography>
+                  </Box>
+                </Box>
+              </DialogContent>
+              <DialogActions sx={{ justifyContent: 'center', pb: 3, gap: 2 }}>
+                <PrimaryButton onClick={handleDownloadQR}>
+                  Download QR Code
+                </PrimaryButton>
+                <SecondaryButton onClick={() => setQrDialogOpen(false)}>
+                  Close
+                </SecondaryButton>
+              </DialogActions>
+            </Dialog>
+
+            <Snackbar
+              open={copySnackbar}
+              autoHideDuration={2000}
+              onClose={() => setCopySnackbar(false)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+              <Alert
+                onClose={() => setCopySnackbar(false)}
+                severity="success"
+                sx={{
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  color: 'white',
+                  fontWeight: '600'
+                }}
+              >
+                Quiz code copied to clipboard!
+              </Alert>
+            </Snackbar>
     </GradientBackground>
   );
 }
