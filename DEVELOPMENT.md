@@ -1,6 +1,6 @@
 # Development Guide
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - **Node.js 20+** (use `nvm` for version management)
@@ -10,7 +10,7 @@
 
 ---
 
-## 📥 Initial Setup
+## Initial Setup
 
 ### 1. Clone the Repository
 ```bash
@@ -118,7 +118,7 @@ Examples:
 
 ---
 
-## 📝 Commit Message Guidelines
+## Commit Message Guidelines
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
@@ -149,7 +149,7 @@ refactor(quiz): extract timer logic into custom hook
 
 ---
 
-## 🧪 Testing Locally
+## Testing Locally
 
 ### Manual Testing Checklist
 
@@ -179,7 +179,7 @@ Test on:
 
 ---
 
-## 🐛 Debugging
+## Debugging
 
 ### Common Issues
 
@@ -216,7 +216,7 @@ npm start
 
 ---
 
-## 📦 Building for Production
+## Building for Production
 ```bash
 # Create optimized build
 npm run build
@@ -227,7 +227,7 @@ ls build/
 
 ---
 
-## 🎨 Code Style
+## Code Style
 
 ### ESLint
 Project uses ESLint for code quality:
@@ -277,7 +277,7 @@ export default function MyComponent() {
 
 ---
 
-## 🔧 Useful Commands
+## Useful Commands
 ```bash
 # Start development server
 npm start
@@ -300,7 +300,7 @@ rm -rf node_modules/.cache
 
 ---
 
-## 📚 Learning Resources
+## Learning Resources
 
 ### React
 - [React Docs](https://react.dev)
@@ -316,7 +316,7 @@ rm -rf node_modules/.cache
 
 ---
 
-## 🤝 Getting Help
+## Getting Help
 
 ### Before Asking
 1. Check existing [Issues](https://github.com/SaherMahtab/QuizCard/issues)
@@ -334,7 +334,7 @@ rm -rf node_modules/.cache
 
 ---
 
-## 🎯 Next Steps
+## Next Steps
 
 1. **Make your first contribution**
    - Find a `good first issue`
