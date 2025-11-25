@@ -110,6 +110,7 @@ export default function CreateQuiz() {
     });
   };
 
+  // Handler for option changes
   const handleOptionChange = (qIndex, optIndex, value) => {
     setQuizData(prev => {
       const questions = [...prev.questions];
@@ -120,10 +121,12 @@ export default function CreateQuiz() {
     });
   };
 
+  // Add new question
   const addQuestion = () => {
     setQuizData(prev => ({ ...prev, questions: [...prev.questions, emptyQuestion()] }));
   };
 
+  // Delete question
   const deleteQuestion = (index) => {
     setQuizData(prev => {
       if (prev.questions.length <= 1) return prev;
@@ -131,6 +134,7 @@ export default function CreateQuiz() {
     });
   };
 
+  // Toggle multiple correct answers
   const toggleMultiAnswer = (qIndex, optIndex) => {
     setQuizData(prev => {
       const questions = [...prev.questions];
@@ -146,6 +150,7 @@ export default function CreateQuiz() {
     });
   };
 
+  // Set single correct answer
   const setSingleCorrect = (qIndex, optIndex) => {
     handleQuestionChange(qIndex, 'correctAnswer', optIndex);
     setQuizData(prev => {
@@ -155,6 +160,7 @@ export default function CreateQuiz() {
     });
   };
 
+  // Set true/false correct answer
   const setTrueFalseCorrect = (qIndex, val) => {
     handleQuestionChange(qIndex, 'correctAnswer', val ? 'True' : 'False');
     setQuizData(prev => {
@@ -164,6 +170,7 @@ export default function CreateQuiz() {
     });
   };
 
+  // Handle question type change
   const handleTypeChange = (qIndex, newType) => {
     setQuizData(prev => {
       const questions = [...prev.questions];
@@ -190,6 +197,7 @@ export default function CreateQuiz() {
     });
   };
 
+  // Validate quiz before submission
   const validateQuiz = () => {
     if (!quizData.title.trim() || !quizData.subject.trim()) {
       setError('Please fill in quiz title and subject');
@@ -223,8 +231,10 @@ export default function CreateQuiz() {
     return true;
   };
 
+  // Generate unique quiz code
   const generateQuizCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
