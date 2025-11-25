@@ -114,7 +114,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   }
 }));
 
-
+//ActionCard
 const ActionCard = styled(Card)(({ theme }) => ({
   background: theme.palette.mode === 'dark'
     ? 'rgba(30, 41, 59, 0.7)'
@@ -156,7 +156,7 @@ const ActionCard = styled(Card)(({ theme }) => ({
     pointerEvents: 'none',
   }
 }));
-
+//StyledTextField
 const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
     background: theme.palette.mode === 'dark'
@@ -203,7 +203,7 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
     fontWeight: '500',
   }
 }));
-
+//button styling
 const PrimaryButton = styled(Button)(({ theme }) => ({
   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
   borderRadius: '12px',
@@ -250,6 +250,7 @@ const PrimaryButton = styled(Button)(({ theme }) => ({
   }
 }));
 
+//button styling
 const SecondaryButton = styled(Button)(({ theme }) => ({
   background: theme.palette.mode === 'dark'
     ? 'rgba(30, 41, 59, 0.6)'
