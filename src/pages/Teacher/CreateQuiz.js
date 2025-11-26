@@ -11,13 +11,20 @@ import {
   Toolbar,
   IconButton,
   Divider,
-  Alert
+  Alert,
+  Card,
+  CardContent,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from '@mui/material';
 import { styled, keyframes, useTheme } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SchoolIcon from '@mui/icons-material/School';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -223,6 +230,61 @@ const DeleteButton = styled(IconButton)(({ theme }) => ({
   }
 }));
 
+function QuizPreview({ quizData, onExitPreview }) {
+    const theme = useTheme();
+  
+    return (
+      <MainCard sx={{ p: 4, mt: 4 }}>
+        <Typography variant="h4" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 1 }}>
+          {quizData.title}
+        </Typography>
+        <Typography variant="h6" sx={{ color: theme.palette.text.secondary, mb: 3 }}>
+          Subject: {quizData.subject}
+        </Typography>
+  
+        {quizData.questions.map((question, qIndex) => (
+          <Card key={qIndex} sx={{ mb: 3, background: 'rgba(0,0,0,0.02)', borderRadius: '16px' }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                {qIndex + 1}. {question.questionText}
+              </Typography>
+              <RadioGroup>
+                {question.options.map((option, optIndex) => (
+                  <FormControlLabel
+                    key={optIndex}
+                    value={option}
+                    control={<Radio />}
+                    label={option}
+                    disabled
+                    sx={{
+                      '&.Mui-disabled': {
+                        color:
+                          optIndex === question.correctAnswer
+                            ? theme.palette.success.main
+                            : theme.palette.text.secondary,
+                      },
+                    }}
+                  />
+                ))}
+              </RadioGroup>
+             
+              
+            </CardContent>
+          </Card>
+        ))}
+  
+        <PrimaryButton
+          startIcon={<EditIcon />}
+          onClick={onExitPreview}
+          sx={{ mt: 3 }}
+          fullWidth
+        >
+          Back to Editing
+        </PrimaryButton>
+      </MainCard>
+    );
+  }
+
 export default function CreateQuiz() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -230,6 +292,7 @@ export default function CreateQuiz() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
 
   const [quizData, setQuizData] = useState({
     title: '',
@@ -353,6 +416,47 @@ export default function CreateQuiz() {
     }
     setLoading(false);
   };
+  
+  const handlePreview = () => {
+      // Run validation before showing preview
+    setError('');
+    if (!quizData.title.trim() || !quizData.subject.trim()) {
+      setError('Please fill in quiz title and subject');
+      return;
+    }
+    for (let i = 0; i < quizData.questions.length; i++) {
+        const q = quizData.questions[i];
+  
+        if (!q.questionText || q.questionText.trim() === '') {
+          setError(`Question ${i + 1} cannot be empty.`);
+          return;
+        }
+  
+        if (!q.options || q.options.length < 2) {
+          setError(`Question ${i + 1} must have at least 2 options.`);
+          return;
+        }
+  
+        for (let j = 0; j < q.options.length; j++) {
+          const opt = q.options[j];
+          if (!opt || opt.trim() === '') {
+            setError(`Option ${j + 1} of Question ${i + 1} cannot be empty.`);
+            return;
+          }
+        }
+  
+        if (
+            q.correctAnswer === null ||
+            q.correctAnswer === undefined ||
+            q.correctAnswer < 0 ||
+            q.correctAnswer >= q.options.length
+        ) {
+          setError(`Question ${i + 1} must have one correct answer selected.`);
+          return;
+        }
+      }
+      setIsPreviewing(true);
+  }
 
   return (
     <GradientBackground>
@@ -380,7 +484,7 @@ export default function CreateQuiz() {
           </IconButton>
           <SchoolIcon sx={{ mx: 2, color: theme.palette.primary.main, fontSize: 28 }} />
           <Typography variant="h6" sx={{ flexGrow: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
-            Create New Quiz
+            {isPreviewing ? 'Quiz Preview' : 'Create New Quiz'}
           </Typography>
           <DarkModeToggle />
         </Toolbar>
@@ -414,137 +518,148 @@ export default function CreateQuiz() {
           </Alert>
         )}
 
-        <MainCard sx={{ p: 4 }}>
-          <form onSubmit={handleSubmit}>
-            {/* Quiz Details */}
-            <Typography variant="h5" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 3 }}>
-              Quiz Details
-            </Typography>
-
-            <StyledTextField
-              fullWidth
-              required
-              label="Quiz Title"
-              value={quizData.title}
-              onChange={(e) => handleQuizChange('title', e.target.value)}
-              sx={{ mt: 2 }}
-            />
-
-            <StyledTextField
-              fullWidth
-              required
-              label="Subject"
-              value={quizData.subject}
-              onChange={(e) => handleQuizChange('subject', e.target.value)}
-              sx={{ mt: 2 }}
-            />
-
-            <StyledTextField
-              fullWidth
-              type="number"
-              label="Time per Question (seconds)"
-              value={quizData.timePerQuestion}
-              onChange={(e) => handleQuizChange('timePerQuestion', e.target.value)}
-              sx={{ mt: 2 }}
-              inputProps={{ min: 5, max: 60 }}
-            />
-
-            <Divider sx={{ my: 4, background: theme.palette.mode === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.1)' }} />
-
-            {/* Questions */}
-            <Typography variant="h5" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 3 }}>
-              Questions
-            </Typography>
-
-            {quizData.questions.map((question, qIndex) => (
-              <QuestionCard key={qIndex} sx={{ p: 3, mt: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
-                    Question {qIndex + 1}
-                  </Typography>
-                  {quizData.questions.length > 1 && (
-                    <DeleteButton onClick={() => deleteQuestion(qIndex)}>
-                      <DeleteIcon />
-                    </DeleteButton>
-                  )}
-                </Box>
-
-                <StyledTextField
-                  fullWidth
-                  required
-                  label="Question Text"
-                  value={question.questionText}
-                  onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
-                  multiline
-                  rows={2}
-                  sx={{ mt: 2 }}
-                />
-
-                <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
-                  Options:
+        {isPreviewing ? (
+            <QuizPreview quizData={quizData} onExitPreview={() => setIsPreviewing(false)} />
+        ) : (
+            <MainCard sx={{ p: 4 }}>
+            <form onSubmit={handleSubmit}>
+                {/* Quiz Details */}
+                <Typography variant="h5" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 3 }}>
+                Quiz Details
                 </Typography>
-
-                {question.options.map((option, optIndex) => (
-                  <Box key={optIndex} sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                    <Typography sx={{ mr: 2, minWidth: 80, color: theme.palette.text.secondary }}>
-                      Option {optIndex + 1}:
+    
+                <StyledTextField
+                fullWidth
+                required
+                label="Quiz Title"
+                value={quizData.title}
+                onChange={(e) => handleQuizChange('title', e.target.value)}
+                sx={{ mt: 2 }}
+                />
+    
+                <StyledTextField
+                fullWidth
+                required
+                label="Subject"
+                value={quizData.subject}
+                onChange={(e) => handleQuizChange('subject', e.target.value)}
+                sx={{ mt: 2 }}
+                />
+    
+                <StyledTextField
+                fullWidth
+                type="number"
+                label="Time per Question (seconds)"
+                value={quizData.timePerQuestion}
+                onChange={(e) => handleQuizChange('timePerQuestion', e.target.value)}
+                sx={{ mt: 2 }}
+                inputProps={{ min: 5, max: 60 }}
+                />
+    
+                <Divider sx={{ my: 4, background: theme.palette.mode === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 130, 246, 0.1)' }} />
+    
+                {/* Questions */}
+                <Typography variant="h5" gutterBottom sx={{ color: theme.palette.text.primary, fontWeight: '600', mb: 3 }}>
+                Questions
+                </Typography>
+    
+                {quizData.questions.map((question, qIndex) => (
+                <QuestionCard key={qIndex} sx={{ p: 3, mt: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ color: theme.palette.text.primary, fontWeight: '600' }}>
+                        Question {qIndex + 1}
                     </Typography>
+                    {quizData.questions.length > 1 && (
+                        <DeleteButton onClick={() => deleteQuestion(qIndex)}>
+                        <DeleteIcon />
+                        </DeleteButton>
+                    )}
+                    </Box>
+    
                     <StyledTextField
-                      fullWidth
-                      required
-                      value={option}
-                      onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
-                      color={question.correctAnswer === optIndex ? 'success' : 'primary'}
+                    fullWidth
+                    required
+                    label="Question Text"
+                    value={question.questionText}
+                    onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
+                    multiline
+                    rows={2}
+                    sx={{ mt: 2 }}
                     />
-                    <Button
-                      variant={question.correctAnswer === optIndex ? 'contained' : 'outlined'}
-                      color="success"
-                      size="small"
-                      sx={{
-                        ml: 2,
-                        borderRadius: '12px',
-                        textTransform: 'none',
-                        fontWeight: '600',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          transform: 'scale(1.05)',
-                        }
-                      }}
-                      onClick={() => handleQuestionChange(qIndex, 'correctAnswer', optIndex)}
-                    >
-                      {question.correctAnswer === optIndex ? 'Correct ✓' : 'Mark Correct'}
-                    </Button>
-                  </Box>
+    
+                    <Typography variant="subtitle2" sx={{ mt: 3, mb: 1, color: theme.palette.text.primary, fontWeight: '600' }}>
+                    Options:
+                    </Typography>
+    
+                    {question.options.map((option, optIndex) => (
+                    <Box key={optIndex} sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                        <Typography sx={{ mr: 2, minWidth: 80, color: theme.palette.text.secondary }}>
+                        Option {optIndex + 1}:
+                        </Typography>
+                        <StyledTextField
+                        fullWidth
+                        required
+                        value={option}
+                        onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
+                        color={question.correctAnswer === optIndex ? 'success' : 'primary'}
+                        />
+                        <Button
+                        variant={question.correctAnswer === optIndex ? 'contained' : 'outlined'}
+                        color="success"
+                        size="small"
+                        sx={{
+                            ml: 2,
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: '600',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                            transform: 'scale(1.05)',
+                            }
+                        }}
+                        onClick={() => handleQuestionChange(qIndex, 'correctAnswer', optIndex)}
+                        >
+                        {question.correctAnswer === optIndex ? 'Correct ✓' : 'Mark Correct'}
+                        </Button>
+                    </Box>
+                    ))}
+                </QuestionCard>
                 ))}
-              </QuestionCard>
-            ))}
-
-            <SecondaryButton
-              startIcon={<AddIcon />}
-              onClick={addQuestion}
-              sx={{ mt: 3 }}
-              fullWidth
-            >
-              Add Another Question
-            </SecondaryButton>
-
-            <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
-              <SecondaryButton
-                onClick={() => navigate('/teacher/dashboard')}
+    
+                <SecondaryButton
+                startIcon={<AddIcon />}
+                onClick={addQuestion}
+                sx={{ mt: 3 }}
                 fullWidth
-              >
-                Cancel
-              </SecondaryButton>
-              <PrimaryButton
-                type="submit"
-                fullWidth
-                disabled={loading}
-              >
-                {loading ? 'Creating Quiz...' : 'Create Quiz'}
-              </PrimaryButton>
-            </Box>
-          </form>
-        </MainCard>
+                >
+                Add Another Question
+                </SecondaryButton>
+    
+                <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
+                <SecondaryButton
+                    onClick={() => navigate('/teacher/dashboard')}
+                    fullWidth
+                >
+                    Cancel
+                </SecondaryButton>
+                <PrimaryButton
+                    startIcon={<VisibilityIcon />}
+                    onClick={handlePreview}
+                    fullWidth
+                >
+                    Preview Quiz
+                </PrimaryButton>
+                <PrimaryButton
+                    type="submit"
+                    fullWidth
+                    disabled={loading}
+                >
+                    {loading ? 'Creating Quiz...' : 'Create Quiz'}
+                </PrimaryButton>
+                </Box>
+            </form>
+            </MainCard>
+        )}
       </Container>
     </GradientBackground>
   );
